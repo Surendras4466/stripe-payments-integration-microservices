@@ -27,8 +27,9 @@ This project consists of the following services:
 - **Eureka Server**  
   Service discovery for managing microservices communication.
 
-👉 Bonus: Add an architecture diagram image (very powerful for selection)
-<img width="600" height="600" alt="Payment processing architecture diagram" src="https://github.com/user-attachments/assets/ff9b495c-65d7-4776-8f1d-62c3a352caf1" />
+👉  architecture diagram image
+<img width="600"  alt="Screenshot 2026-04-02 131936" src="https://github.com/user-attachments/assets/8d869a62-6572-4ed7-8506-d02968b0bddb" />
+
 
 
 ## 🧩 Responsibilities & Contributions
