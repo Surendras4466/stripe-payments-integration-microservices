@@ -1,203 +1,250 @@
-# Stripe Payments Integration (Microservices)
+# Stripe Payments Integration — Microservices
+
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-green)
+![Stripe](https://img.shields.io/badge/Stripe-API-blueviolet)
+![AWS](https://img.shields.io/badge/AWS-EC2_RDS_SecretsManager-orange)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 A scalable and secure payment system built using Spring Boot and Microservices Architecture, integrating Stripe for real-time payment processing and webhook handling.
 
+---
+
 ## 📖 Overview
 
-This project demonstrates a real-world **Stripe Payment Integration System** designed with a microservices architecture.  
+This project demonstrates a real-world Stripe Payment Integration System designed with a microservices architecture. It focuses on:
 
-It focuses on:
-- Secure payment processing  
-- Validation and business rule handling  
-- Asynchronous webhook notification handling  
-- Scalable and maintainable service design  
-The system is designed to be scalable, maintainable, and production-ready.
+- Secure payment processing
+- Validation and business rule handling
+- Asynchronous webhook notification handling
+- Scalable and maintainable service design
 
+---
 
 ## 🏗️ Architecture
-l
+
+![Architecture Diagram] <img width="600"  alt="Screenshot 2026-04-02 131936" src="https://github.com/user-attachments/assets/9530a998-5fd2-4606-a33d-17b32c776c37" />
+)
+ 
 This project consists of the following services:
 
-- **Stripe Provider Service**  
-  Handles Stripe API integration and webhook notifications.
+| Service | Port | Responsibility |
+|---|---|---|
+| Eureka Server | 8761 | Service discovery and registry |
+| Payment Validation Service | 8080 | Request validation, Redis cache, HMAC signature verification |
+| Stripe Provider Service | 8083 | Stripe API — create / retrieve / expire checkout session |
 
-- **Payment Validation Service**  
-  Validates payment requests and ensures data integrity.
-
-- **Eureka Server**  
-  Service discovery for managing microservices communication.
-
-👉  architecture diagram image
-<img width="600"  alt="Screenshot 2026-04-02 131936" src="https://github.com/user-attachments/assets/8d869a62-6572-4ed7-8506-d02968b0bddb" />
-
-
+---
 
 ## 🧩 Responsibilities & Contributions
 
-- Implemented Stripe integration using **Spring Boot & Microservices**
+- Implemented Stripe integration using Spring Boot and Microservices
 - Developed **Stripe Provider Service** for API integration:
-  - Create Session  
-  - Retrieve Session  
-  - Expire Session  
-
+  - Create Session
+  - Retrieve Session
+  - Expire Session
 - Built **Payment Validation Service** with:
-  - Modular validation framework  
-  - Flexible business rule design  
-  - Redis caching for performance  
-
+  - Modular validation framework
+  - Flexible business rule design
+  - Redis caching for performance
 - Secured APIs using:
-  - **HmacSHA256 signature verification**
-  - **Spring Security**
-  - **Stripe Basic Auth**
-
-- Developed:
-  - Custom error codes  
-  - Centralized exception handling  
-
-- Processed Stripe webhook events and performed testing  
-
-- Worked with:
-  - MySQL (Spring JDBC)  
-  - AWS (EC2, RDS, Secrets Manager)  
-
-- Applied:
-  - Design Patterns (Factory, Builder)  
-  - OOP principles  
+  - HmacSHA256 signature verification
+  - Spring Security
+  - Stripe Basic Auth
+- Developed custom error codes and centralized exception handling
+- Processed Stripe webhook events and performed end-to-end testing
+- Worked with MySQL (Spring JDBC) and AWS (EC2, RDS, Secrets Manager)
+- Applied design patterns: Factory, Builder, and core OOP principles
 
 ---
+
 ## ⚙️ Tech Stack
 
-### 👨‍💻 Backend
-- Java  
-- Spring Boot  
-- Spring Security  
-- Spring JDBC  
+**Backend**
+Java · Spring Boot · Spring Security · Spring JDBC
 
-### 🔗 Microservices & Architecture
-- Microservices Architecture  
-- Eureka Service Registry  
-- Circuit Breaker  
+**Microservices & Architecture**
+Microservices Architecture · Eureka Service Registry · Circuit Breaker
 
-### 💳 Integration
-- Stripe API  
-- REST APIs (JSON, CURL, Postman, Swagger)  
+**Integration**
+Stripe API · REST APIs (JSON) · Postman · Swagger
 
-### 🗄️ Database & Cache
-- MySQL (AWS RDS)  
-- Redis Cache  
+**Database & Cache**
+MySQL (AWS RDS) · Redis Cache
 
-### ☁️ Cloud & DevOps
-- AWS (EC2, RDS, Secrets Manager)  
-- Maven  
+**Cloud & DevOps**
+AWS EC2 · AWS RDS · AWS Secrets Manager · Maven
 
-### 🧪 Testing
-- JUnit  
-- Mockito  
+**Testing**
+JUnit · Mockito
 
-### 🛠️ Tools
-- Git, Bitbucket, SourceTree  
-- Eclipse, DBeaver  
-- Jira  
-- SLF4J, Logback  
-- SonarQube  
-- Lombok, Jackson  
-
-### 🤖 AI Tools
-- GitHub Copilot  
-- ChatGPT  
-- Claude  
+**Tools**
+Git · Bitbucket · SourceTree · Eclipse · DBeaver · Jira · SLF4J · Logback · SonarQube · Lombok · Jackson
 
 ---
 
 ## ✨ Features
 
 - Secure Stripe payment integration
-- Webhook handling with signature verification
+- Webhook handling with HMAC signature verification
 - Real-time payment status updates
-- Microservices-based architecture
-- Service discovery using Eureka
+- Microservices-based architecture with Eureka service discovery
 - Local webhook testing using Stripe CLI
 
-This shows real understanding:
+---
 
 ## 🔄 Webhook Flow
-This shows real understanding:
 
-1. User initiates payment
-2. Stripe processes the payment
-3. Stripe sends a webhook event
-4. Webhook endpoint verifies signature
-5. Payment status is updated in the system
-🚀 7. How to Run the Project
+1. User initiates a payment request
+2. Payment Validation Service validates and forwards the request
+3. Stripe Provider Service creates a checkout session via the Stripe API
+4. Stripe processes the payment and sends a webhook event
+5. Webhook endpoint verifies the HMAC signature
+6. Payment status is updated in the database
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Java 17+
-- Maven
-- Stripe CLI
--redis cache
+- Maven 3.8+
+- Redis (running on `localhost:6379`)
+- [Stripe CLI](https://stripe.com/docs/stripe-cli)
+- AWS credentials configured (EC2, RDS, Secrets Manager access)
+
+### Configuration
+
+Copy the environment template and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+All secrets (Stripe API key, DB credentials) are managed via AWS Secrets Manager. See [Configuration Reference](#configuration-reference) below.
+
 ### Steps
-1. Clone the repository
-2. Start Eureka Server
-3.  Start Payment Validation Service
-4. Start Stripe Provider Service
-5. Run Stripe CLI:
-   stripe listen --forward-to localhost:8080/webhook
-🔗 8. API Endpoints (Optional but Powerful)
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/stripe-payments-microservices.git
+   cd stripe-payments-microservices
+   ```
+
+2. **Start Eureka Server** (must be first)
+   ```bash
+   cd eureka-server
+   mvn spring-boot:run
+   ```
+
+3. **Start Payment Validation Service**
+   ```bash
+   cd payment-validation-service
+   mvn spring-boot:run
+   ```
+
+4. **Start Stripe Provider Service**
+   ```bash
+   cd stripe-provider-service
+   mvn spring-boot:run
+   ```
+
+5. **Forward Stripe webhooks locally**
+   ```bash
+   stripe listen --forward-to localhost:8083/v1/stripe/notifications
+   ```
+
+6. **Verify** — open `http://localhost:8761` to confirm all services are registered in the Eureka console.
+
+---
+
 ## 📡 API Endpoints
 
-- POST http://localhost:8080/v1/payments  ->Validation service 
-- POST http://localhost:8083/v1/payments  ->Stripe Service
-- POST http://localhost:8083/v1/stripe/notifications -> webhook 
+### Payment Validation Service — `:8080`
 
-📸 Add Screenshots / Demo Video
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/v1/payments` | Stripe Basic Auth | Validate and forward a payment request |
 
-👉 Add:
-   
-**Postman screenshots**
-<img width="600" alt="Sucess respone" src="https://github.com/user-attachments/assets/9ed80962-5f2d-4470-9ccd-78e34646ef54" />
-<img width="600" alt="payment thresold" src="https://github.com/user-attachments/assets/a76288e4-c42c-4807-a7b4-a86104b92426" />
+### Stripe Provider Service — `:8083`
 
-**Stripe CLI logs**
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/v1/payments` | Stripe Basic Auth | Create a Stripe checkout session |
+| GET | `/v1/payments/{id}` | Stripe Basic Auth | Retrieve a session by ID |
+| DELETE | `/v1/payments/{id}` | Stripe Basic Auth | Expire a checkout session |
+| POST | `/v1/stripe/notifications` | HMAC signature | Receive and process Stripe webhook events |
 
+---
 
-<img width="600" alt="Stripe cli events" src="https://github.com/user-attachments/assets/4465271e-6d46-481a-a717-196da8cf499f" />
+## ⚙️ Configuration Reference
 
-**Eureka Console**
+### stripe-provider-service
 
+| Variable | Description | Source |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | Stripe secret API key | AWS Secrets Manager |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret | AWS Secrets Manager |
+| `DB_URL` | MySQL RDS connection URL | AWS Secrets Manager |
+| `EUREKA_HOST` | Eureka server hostname | `application.yml` |
+| `REDIS_HOST` | Redis host address | `application.yml` |
 
-<img width="600" alt="Eureka console" src="https://github.com/user-attachments/assets/0bba382e-721c-40fe-93a2-ecf2927f9df2" />
+See `.env.example` for the full list of required variables.
 
+---
 
+## 🧪 Testing
 
-****payment chekcout session ****
+Run unit tests for each service:
 
+```bash
+# Payment Validation Service
+cd payment-validation-service
+mvn test
 
+# Stripe Provider Service
+cd stripe-provider-service
+mvn test
+```
 
-<img width="600" alt="payment sucess card details" src="https://github.com/user-attachments/assets/1a8dc923-164a-42d9-a7ed-b21ad96fc7da" />
+For webhook testing, use the Stripe CLI as shown in Getting Started step 5. Check the CLI output for event delivery confirmation and signature verification logs.
 
+---
 
+## 📁 Repository Structure
 
+```
+stripe-payments-microservices/
+├── docs/
+│   ├── architecture.svg
+│   └── postman-collection.json
+├── eureka-server/
+│   ├── src/
+│   ├── pom.xml
+│   └── README.md
+├── payment-validation-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── README.md
+├── stripe-provider-service/
+│   ├── src/
+│   ├── pom.xml
+│   └── README.md
+├── .env.example
+├── pom.xml
+└── README.md
+```
 
-<img width="600" alt="payment fail card decline" src="https://github.com/user-attachments/assets/94b527fc-f050-403e-b52d-ce9276401cf3" />
+---
 
-
-
-
-**Your LinkedIn video link:**
-
-https://www.linkedin.com/posts/surendra2_hiring-opentowork-javadeveloper-ugcPost-7444063846241300480-5Kq8?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEQy49gBM4sVxfbnhAred5p5UYF2RJfksus
-
-
-**👨‍💻 Author**
+## 👨‍💻 Author
 
 **Vadde Gola Surendra**
-
 Java Full Stack Developer | Microservices Enthusiast
-
-
 🎓 B.Tech in Computer Science Engineering (2024 Graduate)
 
-💼 LinkedIn: https://www.linkedin.com/in/surendra2/
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-surendra2-blue?logo=linkedin)](https://www.linkedin.com/in/surendra2/)
+[![Demo](https://img.shields.io/badge/Demo-LinkedIn_Video-blueviolet)](https://www.linkedin.com/posts/surendra2_hiring-opentowork-javadeveloper-ugcPost-7444063846241300480-5Kq8)
 
-📧 Email: vgssurendra4466@gmail.com
+📧 vgssurendra4466@gmail.com
