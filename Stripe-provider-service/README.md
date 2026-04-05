@@ -13,6 +13,7 @@ A **Stripe Payment Provider Microservice** built with Spring Boot. This service 
 ## 📖 Table of Contents
 
 - [Overview](#overview)
+- [Architecture](#architecture)
 - [How It Works](#how-it-works)
 - [Setup](#setup)
 - [Dependencies](#dependencies)
@@ -20,6 +21,7 @@ A **Stripe Payment Provider Microservice** built with Spring Boot. This service 
 - [Eureka Registration](#eureka-registration)
 - [API Endpoint](#api-endpoint)
 - [Request & Response](#request--response)
+- [Stripe Checkout Page](#stripe-checkout-page)
 - [Exception Handling](#exception-handling)
 - [Project Structure](#project-structure)
 
@@ -27,32 +29,35 @@ A **Stripe Payment Provider Microservice** built with Spring Boot. This service 
 
 ## Overview
 
-This service acts as the **payment layer** of the microservices ecosystem. It accepts a checkout request containing line items, success and cancel URLs, then calls the **Stripe Checkout Sessions API** using Spring's `RestClient`. The response (session URL) is returned to the caller, and all Stripe/runtime errors are handled gracefully.
+This service acts as the **payment layer** of the microservices ecosystem. It accepts a checkout request containing line items, success and cancel URLs, then calls the **Stripe Checkout Sessions API** using Spring's `RestClient`. The response (hosted page URL) is returned to the caller, and all Stripe/runtime errors are handled gracefully.
 
-```
-  Caller / API Gateway
-         │
-         │  POST /api/payment/checkout
-         ▼
-  ┌─────────────────────┐
-  │   Stripe Service    │  ──── RestClient ────►  Stripe Checkout API
-  │      :8082          │  ◄─── Session URL ─────  (api.stripe.com)
-  └────────┬────────────┘
-           │ registers
-           ▼
-  Eureka Discovery Server
-        :8761
-```
+---
+
+## 🏗 Architecture
+
+![Payment Flow](Stripe_Arch.png)
+
+> **fig: payment flow**
+
+The diagram above shows the full request-response cycle:
+
+- **Merchant Account** sends a payment request to the **Controller**
+- **Controller** delegates to the **Service** layer
+- **Service** uses the **Http Service Engine** (business logic) to build the Stripe request
+- The response from Stripe comes back as **JSON** through the Http layer
+- **Java Object** mapping converts the JSON into typed response models
+- A **Webhook** handles async Stripe events (e.g. payment confirmation)
+- The final **response** is returned to the Merchant Account
 
 ---
 
 ## How It Works
 
 1. **Request received** — The service receives a `POST` request with `successUrl`, `cancelUrl`, and a list of `lineItems`.
-2. **Business logic** — Each line item is mapped into a Stripe-compatible `price_data` object.
-3. **RestClient call** — The service calls the Stripe Checkout Sessions API using Spring's `RestClient` with the secret key in the `Authorization` header.
-4. **Response handling** — The Stripe session URL is extracted from the response and returned to the caller.
-5. **Exception handling** — Stripe API errors and unexpected runtime errors are caught and returned as structured error responses.
+2. **Business logic** — Each line item is mapped into a Stripe-compatible `price_data` object inside the `Service` layer.
+3. **RestClient call** — The `Http` layer calls the Stripe Checkout Sessions API using Spring's `RestClient` with the secret key in the `Authorization` header.
+4. **Response handling** — The Stripe `hostedPageUrl` is extracted from the JSON response and returned to the caller.
+5. **Exception handling** — Stripe API errors and unexpected runtime errors are caught by the `Exception` layer and returned as structured error responses.
 
 ---
 
@@ -102,7 +107,7 @@ cd stripe-service
 `src/main/resources/application.properties`:
 
 ```properties
-server.port=8082
+server.port=8081
 spring.application.name=stripe-service
 
 # Eureka
@@ -140,10 +145,10 @@ Once running, this service appears as **STRIPE-SERVICE** in the Eureka Dashboard
 
 ## 📡 API Endpoint
 
-| Method | Endpoint                    | Description                          |
-|--------|-----------------------------|--------------------------------------|
-| POST   | `/api/payment/checkout`     | Create a Stripe Checkout Session     |
-| GET    | `/actuator/health`          | Health check (used by Eureka)        |
+| Method | Endpoint            | Description                      |
+|--------|---------------------|----------------------------------|
+| POST   | `/v1/payments`      | Create a Stripe Checkout Session |
+| GET    | `/actuator/health`  | Health check (used by Eureka)    |
 
 ---
 
@@ -151,7 +156,7 @@ Once running, this service appears as **STRIPE-SERVICE** in the Eureka Dashboard
 
 ### Request Body
 
-`POST /api/payment/checkout`
+`POST http://localhost:8081/v1/payments`
 
 ```json
 {
@@ -160,55 +165,59 @@ Once running, this service appears as **STRIPE-SERVICE** in the Eureka Dashboard
   "lineItems": [
     {
       "currency": "usd",
-      "productName": "Product A",
-      "unitAmount": 1000,
+      "productName": "Smartphone",
+      "unitAmount": 700,
       "quantity": 1
     },
     {
       "currency": "usd",
-      "productName": "Product B",
-      "unitAmount": 2000,
+      "productName": "Wireless Earbuds",
+      "unitAmount": 400,
       "quantity": 2
     }
   ]
 }
 ```
 
-| Field                        | Type    | Description                                            |
-|------------------------------|---------|--------------------------------------------------------|
-| `successUrl`                 | String  | URL to redirect to after successful payment            |
-| `cancelUrl`                  | String  | URL to redirect to if payment is cancelled             |
-| `lineItems`                  | Array   | List of products in the checkout session               |
-| `lineItems[].currency`       | String  | Currency code (e.g. `usd`, `eur`)                     |
-| `lineItems[].productName`    | String  | Display name of the product on the Stripe checkout page|
-| `lineItems[].unitAmount`     | Integer | Price in smallest currency unit (e.g. cents for USD)  |
-| `lineItems[].quantity`       | Integer | Quantity of the product                                |
-
-> 💡 `unitAmount` is in the **smallest currency unit** — `1000` = $10.00 USD.
+| Field                         | Type    | Description                                                    |
+|-------------------------------|---------|----------------------------------------------------------------|
+| `successUrl`                  | String  | Redirect URL after successful payment                          |
+| `cancelUrl`                   | String  | Redirect URL if payment is cancelled                           |
+| `lineItems[].currency`        | String  | Currency code (e.g. `usd`, `eur`)                             |
+| `lineItems[].productName`     | String  | Product name shown on the Stripe checkout page                 |
+| `lineItems[].unitAmount`      | Integer | Price in smallest currency unit (e.g. cents: `700` = $7.00)   |
+| `lineItems[].quantity`        | Integer | Quantity of the product                                        |
 
 ---
 
-### Success Response
+### ✅ Success Response — `200 OK`
+
+![Success Response - Postman](Sucess_respone.png)
+
+On success, the service returns a `hostedPageUrl` — the Stripe-generated checkout URL to redirect the user to:
 
 ```json
 {
-  "sessionUrl": "https://checkout.stripe.com/pay/cs_test_abc123..."
+  "hostedPageUrl": "https://checkout.stripe.com/c/pay/cs_test_..."
 }
 ```
-
-Redirect the user to `sessionUrl` to complete payment on the Stripe-hosted checkout page.
 
 ---
 
-### Error Response
+## 💳 Stripe Checkout Page
 
-```json
-{
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Invalid line item: unitAmount must be greater than 0"
-}
-```
+Once the user is redirected to the `hostedPageUrl`, they land on the Stripe-hosted checkout page:
+
+![Stripe Checkout Page](payment_sucess_card_details.png)
+
+The checkout page shows:
+- **Line items** — product names, quantities, and prices (e.g. Smartphone × 1, Wireless Earbuds × 2)
+- **Currency selection** — supports INR and USD with live conversion
+- **Payment method** — card details (number, expiry, CVV)
+- **Contact information** — email field
+- **Pay button** — submits the payment to Stripe
+
+> 🔒 The checkout page is fully hosted and secured by Stripe — no card data touches your service.
 
 ---
 
@@ -216,12 +225,12 @@ Redirect the user to `sessionUrl` to complete payment on the Stripe-hosted check
 
 All exceptions are handled globally and returned as structured JSON responses.
 
-| Scenario                          | HTTP Status | Description                                      |
-|-----------------------------------|-------------|--------------------------------------------------|
-| Invalid request body              | `400`       | Missing or invalid fields in the request         |
-| Stripe API authentication failure | `401`       | Invalid or missing Stripe secret key             |
-| Stripe API error                  | `402`       | Payment/session creation failed on Stripe's side |
-| Unexpected server error           | `500`       | Internal error during processing                 |
+| Scenario                          | HTTP Status | Description                              |
+|-----------------------------------|-------------|------------------------------------------|
+| Invalid request body              | `400`       | Missing or invalid fields in the request |
+| Stripe API authentication failure | `401`       | Invalid or missing Stripe secret key     |
+| Stripe API error                  | `402`       | Session creation failed on Stripe's side |
+| Unexpected server error           | `500`       | Internal error during processing         |
 
 ---
 
@@ -233,7 +242,7 @@ src/
     ├── java/
     │   └── com/yourorg/stripeservice/
     │       ├── Constant/               # App-wide constants (API URLs, headers, etc.)
-    │       ├── Controller/             # REST controllers — exposes payment endpoints
+    │       ├── Controller/             # REST controllers — exposes /v1/payments
     │       ├── Exception/              # Global exception handler & custom exceptions
     │       ├── Http/                   # RestClient setup & Stripe API calls
     │       ├── Pojo/                   # Request & Response model classes
