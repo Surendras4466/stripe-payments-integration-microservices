@@ -229,28 +229,21 @@ All exceptions are handled globally and returned as structured JSON responses.
 
 ```
 src/
-├── main/
-│   ├── java/
-│   │   └── com/yourorg/stripeservice/
-│   │       ├── StripeServiceApplication.java   # Main entry point
-│   │       ├── controller/
-│   │       │   └── PaymentController.java      # POST /api/payment/checkout
-│   │       ├── service/
-│   │       │   └── StripeService.java          # Business logic & RestClient call
-│   │       ├── model/
-│   │       │   ├── CheckoutRequest.java        # Incoming request model
-│   │       │   ├── LineItem.java               # Line item model
-│   │       │   └── CheckoutResponse.java       # Response model (sessionUrl)
-│   │       ├── exception/
-│   │       │   ├── GlobalExceptionHandler.java # @RestControllerAdvice handler
-│   │       │   └── StripeApiException.java     # Custom Stripe exception
-│   │       └── config/
-│   │           └── RestClientConfig.java       # RestClient bean configuration
-│   └── resources/
-│       └── application.properties              # App & Eureka config
-└── test/
-    └── java/
-        └── com/yourorg/stripeservice/          # Unit & integration tests
+└── main/
+    ├── java/
+    │   └── com/yourorg/stripeservice/
+    │       ├── Constant/               # App-wide constants (API URLs, headers, etc.)
+    │       ├── Controller/             # REST controllers — exposes payment endpoints
+    │       ├── Exception/              # Global exception handler & custom exceptions
+    │       ├── Http/                   # RestClient setup & Stripe API calls
+    │       ├── Pojo/                   # Request & Response model classes
+    │       ├── Service/
+    │       │   └── Interface/          # Service interfaces & implementations
+    │       ├── Stripe/                 # Stripe-specific mapping & session logic
+    │       ├── Utill/                  # Utility/helper classes
+    │       └── config/                 # Spring configuration (RestClient bean, etc.)
+    └── resources/
+        └── application.properties      # App, Eureka & Stripe configuration
 pom.xml
 ```
 
